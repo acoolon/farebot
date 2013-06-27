@@ -51,7 +51,7 @@ public abstract class DesfireFileSettings implements Parcelable {
         else if (fileType == LINEAR_RECORD_FILE || fileType == CYCLIC_RECORD_FILE)
             return new RecordDesfireFileSettings(stream);
         else if (fileType == VALUE_FILE)
-            throw new UnsupportedOperationException("Value files not yet supported");
+            return new ValueDesfireFileSettings(stream);
         else
             throw new Exception("Unknown file type: " + Integer.toHexString(fileType));
     }
@@ -102,6 +102,12 @@ public abstract class DesfireFileSettings implements Parcelable {
                 int maxRecords = source.readInt();
                 int curRecords = source.readInt();
                 return new RecordDesfireFileSettings(fileType, commSetting, accessRights, recordSize, maxRecords, curRecords);
+            } else if (fileType == VALUE_FILE) {
+                int upperLimit = source.readInt();
+                int lowerLimit = source.readInt();
+                int limitedValue = source.readInt();
+                int limitedEnabled = source.readInt();
+                return new ValueDesfireFileSettings(fileType, commSetting, accessRights, upperLimit, lowerLimit, limitedValue, limitedEnabled);
             } else {
                 return new UnsupportedDesfireFileSettings(fileType);
             }
@@ -183,6 +189,54 @@ public abstract class DesfireFileSettings implements Parcelable {
             parcel.writeInt(recordSize);
             parcel.writeInt(maxRecords);
             parcel.writeInt(curRecords);
+        }
+    }
+
+    public static class ValueDesfireFileSettings extends DesfireFileSettings {
+        public final int lowerLimit;
+        public final int upperLimit;
+        public final int limitedValue;
+        public final int limitedEnabled;
+
+        public ValueDesfireFileSettings(ByteArrayInputStream stream) {
+            super(stream);
+
+            byte[] buf = new byte[4];
+            stream.read(buf, 0, buf.length);
+            ArrayUtils.reverse(buf);
+            lowerLimit = Utils.byteArrayToInt(buf);
+
+            buf = new byte[4];
+            stream.read(buf, 0, buf.length);
+            ArrayUtils.reverse(buf);
+            upperLimit = Utils.byteArrayToInt(buf);
+
+            buf = new byte[4];
+            stream.read(buf, 0, buf.length);
+            ArrayUtils.reverse(buf);
+            limitedValue = Utils.byteArrayToInt(buf);
+
+            buf = new byte[1];
+            stream.read(buf, 0, buf.length);
+            limitedEnabled = Utils.byteArrayToInt(buf);
+
+        }
+
+        ValueDesfireFileSettings (byte fileType, byte commSetting, byte[] accessRights, int lowerLimit, int upperLimit, int limitedValue, int limitedEnabled) {
+            super(fileType, commSetting, accessRights);
+            this.lowerLimit = lowerLimit;
+            this.upperLimit = upperLimit;
+            this.limitedValue = limitedValue;
+            this.limitedEnabled = limitedEnabled;
+        }
+
+        @Override
+        public void writeToParcel (Parcel parcel, int flags) {
+            super.writeToParcel(parcel, flags);
+            parcel.writeInt(lowerLimit);
+            parcel.writeInt(upperLimit);
+            parcel.writeInt(limitedValue);
+            parcel.writeInt(limitedEnabled);
         }
     }
 

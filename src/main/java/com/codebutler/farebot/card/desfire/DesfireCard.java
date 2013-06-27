@@ -77,6 +77,8 @@ public class DesfireCard extends Card {
                         byte[] data = null;
                         if (settings instanceof DesfireFileSettings.StandardDesfireFileSettings)
                             data = desfireTag.readFile(fileId);
+                        else if (settings instanceof DesfireFileSettings.ValueDesfireFileSettings)
+                            data = desfireTag.getValue(fileId);
                         else
                             data = desfireTag.readRecord(fileId);
                         files.add(DesfireFile.create(fileId, settings, data));
@@ -241,7 +243,21 @@ public class DesfireCard extends Card {
 
                             fileSettings = new DesfireFileSettings.RecordDesfireFileSettings(fileType, commSetting, accessRights, recordSize, maxRecords, curRecords);
                             break;
+                        case DesfireFileSettings.VALUE_FILE:
+                            e = (Element) settingsElement.getElementsByTagName("lowerLimit").item(0);
+                            int lowerLimit = Integer.parseInt(e.getTextContent());
 
+                            e = (Element) settingsElement.getElementsByTagName("upperLimit").item(0);
+                            int upperLimit = Integer.parseInt(e.getTextContent());
+
+                            e = (Element) settingsElement.getElementsByTagName("limitedValue").item(0);
+                            int limitedValue = Integer.parseInt(e.getTextContent());
+
+                            e = (Element) settingsElement.getElementsByTagName("limitedEnabled").item(0);
+                            int limitedEnabled = Integer.parseInt(e.getTextContent());
+
+                            fileSettings = new DesfireFileSettings.ValueDesfireFileSettings(fileType, commSetting, accessRights, lowerLimit, upperLimit, limitedValue, limitedEnabled);
+                            break;
                         default:
                             throw new UnsupportedOperationException("Unknown file type: " + fileType);
                     }
@@ -319,6 +335,27 @@ public class DesfireCard extends Card {
 
                         element = doc.createElement("currecords");
                         element.setTextContent(String.valueOf(curRecords));
+                        fileSettingsElement.appendChild(element);
+                    } else if (settings instanceof DesfireFileSettings.ValueDesfireFileSettings) {
+                        int lowerLimit = ((DesfireFileSettings.ValueDesfireFileSettings)settings).lowerLimit;
+                        int upperLimit = ((DesfireFileSettings.ValueDesfireFileSettings)settings).upperLimit;
+                        int limitedValue = ((DesfireFileSettings.ValueDesfireFileSettings)settings).limitedValue;
+                        int limitedEnabled = ((DesfireFileSettings.ValueDesfireFileSettings)settings).limitedEnabled;
+
+                        element = doc.createElement("lowerLimit");
+                        element.setTextContent(String.valueOf(lowerLimit));
+                        fileSettingsElement.appendChild(element);
+
+                        element = doc.createElement("upperLimit");
+                        element.setTextContent(String.valueOf(upperLimit));
+                        fileSettingsElement.appendChild(element);
+
+                        element = doc.createElement("limitedValue");
+                        element.setTextContent(String.valueOf(limitedValue));
+                        fileSettingsElement.appendChild(element);
+
+                        element = doc.createElement("limitedEnabled");
+                        element.setTextContent(String.valueOf(limitedEnabled));
                         fileSettingsElement.appendChild(element);
                     } else {
                         throw new Exception("Unknown file type: " + Integer.toHexString(settings.fileType));

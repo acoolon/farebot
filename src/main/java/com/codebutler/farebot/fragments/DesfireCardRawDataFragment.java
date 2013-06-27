@@ -39,6 +39,7 @@ import com.codebutler.farebot.card.desfire.DesfireCard;
 import com.codebutler.farebot.card.desfire.DesfireFile;
 import com.codebutler.farebot.card.desfire.DesfireFileSettings.RecordDesfireFileSettings;
 import com.codebutler.farebot.card.desfire.DesfireFileSettings.StandardDesfireFileSettings;
+import com.codebutler.farebot.card.desfire.DesfireFileSettings.ValueDesfireFileSettings;
 
 public class DesfireCardRawDataFragment extends ExpandableListFragment {
     private DesfireCard mCard;
@@ -121,6 +122,14 @@ public class DesfireCardRawDataFragment extends ExpandableListFragment {
                             String.valueOf(fileSettings.curRecords),
                             String.valueOf(fileSettings.maxRecords),
                             String.valueOf(fileSettings.recordSize)));
+                } else if (file.getFileSettings() instanceof ValueDesfireFileSettings) {
+                    ValueDesfireFileSettings fileSettings = (ValueDesfireFileSettings) file.getFileSettings();
+                    textView2.setText(String.format("Type: %s, Lower Limit: %s, Upper Limit: %s, Limited Value: %s, Limited Enabled: %s",
+                            fileSettings.getFileTypeName(),
+                            String.valueOf(fileSettings.lowerLimit),
+                            String.valueOf(fileSettings.upperLimit),
+                            String.valueOf(fileSettings.limitedValue),
+                            String.valueOf(fileSettings.limitedEnabled)));
                 } else {
                     textView2.setText("Unknown file type");
                 }

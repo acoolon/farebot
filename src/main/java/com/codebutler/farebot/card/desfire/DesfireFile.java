@@ -24,7 +24,9 @@ package com.codebutler.farebot.card.desfire;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import com.codebutler.farebot.Utils;
 import com.codebutler.farebot.card.desfire.DesfireFileSettings.RecordDesfireFileSettings;
+import com.codebutler.farebot.card.desfire.DesfireFileSettings.ValueDesfireFileSettings;
 import org.apache.commons.lang.ArrayUtils;
 
 public class DesfireFile implements Parcelable {
@@ -35,6 +37,8 @@ public class DesfireFile implements Parcelable {
     public static DesfireFile create (int fileId, DesfireFileSettings fileSettings, byte[] fileData) {
         if (fileSettings instanceof RecordDesfireFileSettings)
             return new RecordDesfireFile(fileId, fileSettings, fileData);
+        if (fileSettings instanceof ValueDesfireFileSettings)
+            return new ValueDesfireFile(fileId, fileSettings, fileData);
         else
             return new DesfireFile(fileId, fileSettings, fileData);
     }
@@ -115,6 +119,22 @@ public class DesfireFile implements Parcelable {
 
         public DesfireRecord[] getRecords () {
             return mRecords;
+        }
+    }
+
+    public static class ValueDesfireFile extends DesfireFile {
+        private int mValue;
+
+        private ValueDesfireFile (int fileId, DesfireFileSettings fileSettings, byte[] fileData) {
+            super(fileId, fileSettings, fileData);
+
+            byte[] buf = fileData.clone();
+            ArrayUtils.reverse(buf);
+            mValue = Utils.byteArrayToInt(buf);
+        }
+
+        public int getValue () {
+            return mValue;
         }
     }
 
