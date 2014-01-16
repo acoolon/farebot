@@ -24,9 +24,10 @@ import com.codebutler.farebot.ListItem;
 import com.codebutler.farebot.Utils;
 import com.codebutler.farebot.card.Card;
 import com.codebutler.farebot.card.desfire.DesfireCard;
+import com.codebutler.farebot.card.desfire.DesfireApplication;
 import com.codebutler.farebot.card.desfire.DesfireFile;
 import com.codebutler.farebot.card.desfire.DesfireFile.ValueDesfireFile;
-import com.codebutler.farebot.card.desfire.DesfireApplication;
+import com.codebutler.farebot.card.desfire.DesfireFileSettings.ValueDesfireFileSettings;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -38,6 +39,7 @@ public class MensacardTransitData extends TransitData {
     private static final int CREDIT_APPLICATION    = 0x5f8415;
 
     private int     mBalance;
+    private int     lastTransaction;
 
     public static boolean check (Card card) {
         if (card instanceof DesfireCard) {
@@ -51,18 +53,19 @@ public class MensacardTransitData extends TransitData {
     }
 
     public static TransitIdentity parseTransitIdentity(Card card) {
-        // Maybe 0x5f804 file 0x7
-        return new TransitIdentity("Mencacard", null);
+        return new TransitIdentity("Mensacard", null);
     }
 
     public MensacardTransitData (Parcel parcel) {
-        mBalance      = parcel.readInt();
+        mBalance = parcel.readInt();
+        lastTransaction = parcel.readInt();
     }
     
     public MensacardTransitData (Card card) {
         DesfireCard desfireCard = (DesfireCard) card;
         ValueDesfireFile file = (ValueDesfireFile) desfireCard.getApplication(CREDIT_APPLICATION).getFile(0x1);
         mBalance = file.getValue();
+        lastTransaction = ((ValueDesfireFileSettings) file.getFileSettings()).limitedValue;
     }
 
     @Override
@@ -72,12 +75,12 @@ public class MensacardTransitData extends TransitData {
 
     @Override
     public String getBalanceString () {
-        return NumberFormat.getCurrencyInstance(Locale.GERMANY).format((double) mBalance / 1000);
+        return NumberFormat.getCurrencyInstance(Locale.GERMANY).format((double) mBalance / 1000)
+                + "\n" + NumberFormat.getCurrencyInstance(Locale.GERMANY).format((double) lastTransaction / 1000);
     }
 
     @Override
     public String getSerialNumber () {
-        // XXX
         return "";
     }
 
@@ -103,5 +106,6 @@ public class MensacardTransitData extends TransitData {
 
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeInt(mBalance);
+        parcel.writeInt(lastTransaction);
     }
 }
